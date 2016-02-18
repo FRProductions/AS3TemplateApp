@@ -1,19 +1,17 @@
 package com.rhino.AS3TemplateApp
 {
   import com.rhino.AS3TemplateApp.assets.Assets;
-  import com.rhino.AS3TemplateApp.data.OptionsData;
   import com.rhino.AS3TemplateApp.screens.LoadingSplashScreen;
   import com.rhino.AS3TemplateApp.screens.MainMenuScreen;
-  import com.rhino.AS3TemplateApp.screens.WheelSpinnerScreen;
   import com.rhino.AS3TemplateApp.themes.AppMobileTheme;
   import com.rhino.util.Log;
-  
+
   import feathers.controls.ScreenNavigator;
   import feathers.controls.ScreenNavigatorItem;
-  
+
   import starling.display.Sprite;
   import starling.events.Event;
-  
+
   public class RootSprite extends Sprite
   {
     
@@ -32,7 +30,7 @@ package com.rhino.AS3TemplateApp
       super();
       
       // init
-      this.addEventListener(starling.events.Event.ADDED_TO_STAGE, onAddedToStage);
+      this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
     }
 
     /**************************************************************************
@@ -41,7 +39,7 @@ package com.rhino.AS3TemplateApp
     
     private function onAddedToStage(event:Event):void
     {
-      this.removeEventListener(starling.events.Event.ADDED_TO_STAGE, onAddedToStage);
+      this.removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
       
       // calculate master scale
       sScale = this.stage.stageHeight / 1024;
