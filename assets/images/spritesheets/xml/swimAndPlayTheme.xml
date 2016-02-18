@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
+<!-- $TexturePacker:SmartUpdate:9f5cf79ab86c598479884a2174a936bd:fb31ff557f7aef37530cb24ae81dacd2:36a9d190aed05f9eace0e26f89baa055$ -->
+<TextureAtlas imagePath="swimAndPlayTheme.png" width="510" height="1299">
+    <SubTexture name="background-brown-border-skin" x="332" y="786" width="100" height="100"/>
+    <SubTexture name="background-brown-yellow" x="210" y="1096" width="200" height="200"/>
+    <SubTexture name="background-gray-half-border" x="443" y="400" width="64" height="64"/>
+    <SubTexture name="button-rectangle-green-select-small" x="342" y="3" rotated="true" width="120" height="194"/>
+    <SubTexture name="button-rectangle-green-select" x="3" y="443" width="325" height="196" frameX="-3" frameY="-15" frameWidth="340" frameHeight="220"/>
+    <SubTexture name="button-rectangle-red-cancel-small" x="342" y="201" rotated="true" width="119" height="195"/>
+    <SubTexture name="button-rectangle-red-cancel" x="3" y="643" width="325" height="195" frameX="-8" frameY="-16" frameWidth="339" frameHeight="219"/>
+    <SubTexture name="button-round-green-check" x="3" y="842" rotated="true" width="203" height="202"/>
+    <SubTexture name="button-round-purple-back" x="210" y="890" rotated="true" width="203" height="202"/>
+    <SubTexture name="button-round-red-close" x="3" y="1048" rotated="true" width="203" height="202"/>
+    <SubTexture name="button-rounded-blue" x="3" y="3" width="335" height="216" frameX="-13" frameY="-18" frameWidth="348" frameHeight="234"/>
+    <SubTexture name="button-rounded-purple" x="3" y="223" width="335" height="216" frameX="-13" frameY="-18" frameWidth="348" frameHeight="234"/>
+    <SubTexture name="checkboxChecked" x="439" y="654" width="68" height="69" frameX="-2" frameY="-1" frameWidth="70" frameHeight="95"/>
+    <SubTexture name="checkboxUnchecked" x="439" y="727" width="48" height="48" frameX="-2" frameY="-22" frameWidth="70" frameHeight="95"/>
+    <SubTexture name="map-progress-bar-border" x="443" y="468" width="64" height="64"/>
+    <SubTexture name="map-progress-bar-fill" x="443" y="600" width="50" height="50" frameX="-7" frameY="-7" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="progress-bar-border" x="443" y="536" width="64" height="60" frameX="0" frameY="-2" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="progress-bar-fill" x="466" y="3" width="36" height="32" frameX="-14" frameY="-16" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="slider-thumb" x="342" y="400" width="97" height="218" frameX="-8" frameY="-11" frameWidth="105" frameHeight="229"/>
+    <SubTexture name="slider-track" x="332" y="622" rotated="true" width="103" height="160"/>
+</TextureAtlas>

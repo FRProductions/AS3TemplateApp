@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="AS3TemplateApp" basedir=".." default="desktop-debug" xmlns:if="ant:if" xmlns:unless="ant:unless">
+
+  <!-- IMPORTANT: set environment variable AIR_NOANDROIDFLAIR=true for this ANT script for proper Android package names, otherwise "air." is auto prefixed -->
+
+  <!-- NOTE: properties files declared first override subsequent properties files -->
+  <property file="build/local.properties"/>                                       <!-- local machine environment settings -->
+  <property file="build/build.properties"/>                                       <!-- common app settings -->
+  <property file="build/sdk.properties"/>                                         <!-- SDK settings -->
+
+  <!-- reference flexTasks.jar to use mxmlc ANT task -->
+  <taskdef resource="flexTasks.tasks" classpath="${airsdk.flexTasks}"/>
+
+  <!-- TARGETS: web update -->
+
+  <target name="web-release-update" depends="swf-web-release" description="Builds the release web SWF and copies it to the web directory.">
+    <copy file="${output.swf-web-release}" tofile="${basedir}/web/${ant.project.name}.swf" overwrite="true"/>
+  </target>
+
+  <target name="web-debug-update" depends="swf-web-debug">
+    <copy file="${output.swf-web-debug}" tofile="${basedir}/web/${ant.project.name}.swf" overwrite="true"/>
+  </target>
+
+  <!-- TARGETS: install -->
+
+  <target name="ipa-debug-install-simulator" depends="cleanup,ipa-debug-simulator" description="Compiles and packages the debug IPA then installs it on the iOS simulator.">
+    <installIosSimulator packageFile="${output.dir}/${ant.project.name}-debug-simulator.ipa"/>
+  </target>
+
+  <target name="ipa-debug-install-device" depends="cleanup,ipa-debug" description="Compiles and packages the debug IPA then installs it on a connected iOS device.">
+    <install platform="ios" packageFile="${output.dir}/${ant.project.name}-debug.ipa"/>
+  </target>
+
+  <target name="ipa-debug-install-device-nobuild" description="Installs the pre-built debug IPA on a connected iOS device.">
+    <install platform="ios" packageFile="${output.dir}/${ant.project.name}-debug.ipa"/>
+  </target>
+
+  <target name="ipa-release-install-device" depends="cleanup,ipa-release-ad-hoc" description="Compiles and packages the release IPA then installs it on a connected iOS device.">
+    <install platform="ios" packageFile="${output.dir}/${ant.project.name}-release-ad-hoc.ipa"/>
+  </target>
+
+  <target name="ipa-release-install-device-nobuild" description="Installs the pre-built release IPA on a connected iOS device.">
+    <install platform="ios" packageFile="${output.dir}/${ant.project.name}-release-ad-hoc.ipa"/>
+  </target>
+
+  <target name="apk-debug-install-device" depends="cleanup,apk-debug" description="Compiles and packages the debug APK then installs it on a connected Android device.">
+    <install platform="android" packageFile="${output.dir}/${ant.project.name}-debug.apk"/>
+  </target>
+
+  <target name="apk-debug-install-device-nobuild" description="Installs the pre-built debug APK on a connected Android device.">
+    <install platform="android" packageFile="${output.dir}/${ant.project.name}-debug.apk"/>
+  </target>
+
+  <target name="apk-release-install-device" depends="cleanup,apk-release" description="Compiles and packages the release APK then installs it on a connected Android device.">
+    <install platform="android" packageFile="${output.dir}/${ant.project.name}-release.apk"/>
+  </target>
+
+  <!-- TARGETS: APK generation -->
+
+  <target name="apk-release" depends="asset-app-icon,app-descriptor,swf-android-release,apk-package-dir">
+    <package-apk swfFile="${output.swf-android-release}" target="apk-captive-runtime" connect=""
+      outputFile="${output.dir}/${ant.project.name}-release"/>
+  </target>
+
+  <target name="apk-debug" depends="app-descriptor,swf-android-debug,apk-package-dir">
+    <package-apk swfFile="${output.swf-android-debug}" target="apk-debug" connect="-connect ${debug.ip}"
+      outputFile="${output.dir}/${ant.project.name}-debug"/>
+  </target>
+
+  <target name="apk-package-dir" depends="app-descriptor">
+    <echo message="preparing Android APK package directory..."/>
+    <delete dir="${output.apkPackageDir}"/>
+    <!-- copy assets -->
+    <copy todir="${output.apkPackageDir}/assets">
+      <fileset dir="${basedir}/assets">
+        <exclude name="images/launchScreens/iOS/"/>
+        <exclude name="videos/welcome*.mp4" unless:true="${includeWelcomeVideos}"/>
+      </fileset>
+    </copy>
+    <!-- create custom AIR application descriptor file with Android ANE references -->
+    <copy file="${output.app-descriptor}" tofile="${output.apkPackageDir}/${app.descriptorFilename}" overwrite="true"/>
+    <!--addExtensionToDescriptorFile descriptorFile="${output.apkPackageDir}/${app.descriptorFilename}" aneId="com.milkmangames.extensions.GoogleServices"/-->
+    <echo message="done!"/>
+  </target>
+
+  <!-- TARGETS: IPA generation -->
+
+  <target name="ipa-release-app-store" depends="asset-app-icon,app-descriptor,swf-ios-release,ipa-package-dir">
+    <addIOSEntitlementToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" entitlementXML="&lt;key&gt;beta-reports-active&lt;/key&gt;&lt;true/&gt;"/>
+    <addIOSEntitlementToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" entitlementXML="&lt;key&gt;get-task-allow&lt;/key&gt;&lt;false/&gt;"/>
+    <package-ipa swfFile="${output.swf-ios-release}" target="ipa-app-store" provisioningProfile="${cert.ios_profile_appStore}" connectLine=""
+      useLegacyAOTLine="" platformSDKLine="" outputFile="${output.dir}/${ant.project.name}-release-app-store"/>
+  </target>
+
+  <target name="ipa-release-ad-hoc" depends="asset-app-icon,app-descriptor,swf-ios-release,ipa-package-dir">
+    <package-ipa swfFile="${output.swf-ios-release}" target="ipa-ad-hoc" provisioningProfile="${cert.ios_profile_adHoc}" connectLine=""
+      useLegacyAOTLine="" platformSDKLine="" outputFile="${output.dir}/${ant.project.name}-release-ad-hoc"/>
+  </target>
+
+  <target name="ipa-debug" depends="app-descriptor,swf-ios-debug,ipa-package-dir">
+    <package-ipa swfFile="${output.swf-ios-debug}" target="ipa-debug-interpreter" provisioningProfile="${cert.ios_profile_adHoc}" connectLine="-connect ${debug.ip}"
+      useLegacyAOTLine="" platformSDKLine="" outputFile="${output.dir}/${ant.project.name}-debug"/>
+  </target>
+
+  <target name="ipa-debug-simulator" depends="app-descriptor,swf-ios-debug,ipa-package-dir">
+    <package-ipa swfFile="${output.swf-ios-debug}" target="ipa-debug-interpreter-simulator" provisioningProfile="${cert.ios_profile_adHoc}" connectLine="-connect ${debug.ip}"
+      useLegacyAOTLine="" platformSDKLine="-platformsdk ${iossimsdk.dir}" outputFile="${output.dir}/${ant.project.name}-debug-simulator"/>
+  </target>
+
+  <target name="ipa-package-dir" depends="app-descriptor">
+    <echo message="preparing iOS IPA package directory..."/>
+    <delete dir="${output.ipaPackageDir}"/>
+    <!-- copy assets -->
+    <copy todir="${output.ipaPackageDir}/assets">
+      <fileset dir="${basedir}/assets">
+        <exclude name="videos/welcome*.mp4" unless:true="${includeWelcomeVideos}"/>
+      </fileset>
+    </copy>
+    <!-- move iOS launch screen images to the root of the application package -->
+    <move todir="${output.ipaPackageDir}">
+      <fileset dir="${output.ipaPackageDir}/assets/images/launchScreens/iOS">
+        <include name="*.png"/>
+      </fileset>
+    </move>
+    <!-- create custom AIR application descriptor file with iOS ANE references -->
+    <copy file="${output.app-descriptor}" tofile="${output.ipaPackageDir}/${app.descriptorFilename}" overwrite="true"/>
+    <addExtensionToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" aneId="com.milkmangames.extensions.StoreKit"/>
+    <addExtensionToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" aneId="com.milkmangames.extensions.GoogleServices"/>
+    <addExtensionToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" aneId="com.milkmangames.extensions.GAnalytics"/>
+    <addExtensionToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" aneId="com.hasoffers.MobileAppTracker"/>
+    <addExtensionToDescriptorFile descriptorFile="${output.ipaPackageDir}/${app.descriptorFilename}" aneId="com.rhino.ane.NativeVideo"/>
+    <echo message="done!"/>
+  </target>
+
+  <!-- TARGET: AIR application descriptor file -->
+
+  <target name="app-descriptor" depends="version-label">
+    <echo message="creating AIR application descriptor file from template..."/>
+    <copy file="${app.descriptorTemplate}" tofile="${output.app-descriptor}" overwrite="true"/>
+    <replace file="${output.app-descriptor}">
+      <replacefilter token="[app-id]"         value="${app.id}"               />
+      <replacefilter token="[filename]"       value="${ant.project.name}"     />
+      <replacefilter token="[name]"           value="${app.shortName}"        />
+      <replacefilter token="[version]"        value="${app.version}"          />
+      <replacefilter token="[versionLabel]"   value="${app.publicVersion}"    />
+      <replacefilter token="[swf]"            value="${ant.project.name}.swf" />
+    </replace>
+    <echo message="done!"/>
+  </target>
+
+  <!-- TARGETS: SWF compilation / generation -->
+
+  <target name="swf-desktop-debug" depends="version-label">
+    <compile configFile="${airsdk.mobile-config}" outputFile="${output.swf-desktop-debug}" debug="true" versionDecorators=" debug"/>
+  </target>
+
+  <target name="swf-ios-debug" depends="version-label,ios-ane-dir">
+    <compile configFile="${airsdk.mobile-config}" outputFile="${output.swf-ios-debug}" debug="true" iosFlag="true" aneDir="${output.ios-ane.dir}" versionDecorators=" debug"/>
+  </target>
+
+  <target name="swf-ios-release" depends="version-label,ios-ane-dir">
+    <compile configFile="${airsdk.mobile-config}" outputFile="${output.swf-ios-release}" debug="false" iosFlag="true" aneDir="${output.ios-ane.dir}"/>
+  </target>
+
+  <target name="swf-android-debug" depends="version-label,android-ane-dir">
+    <compile configFile="${airsdk.mobile-config}" outputFile="${output.swf-android-debug}" debug="true" androidFlag="true" aneDir="${output.android-ane.dir}" versionDecorators=" Google debug"/>
+  </target>
+
+  <target name="swf-android-release" depends="version-label,android-ane-dir">
+    <compile configFile="${airsdk.mobile-config}" outputFile="${output.swf-android-release}" debug="false" androidFlag="true" aneDir="${output.android-ane.dir}" versionDecorators=" Google"/>
+  </target>
+
+  <target name="swf-web-debug" depends="version-label">
+    <compile configFile="${airsdk.config}" outputFile="${output.swf-web-debug}" debug="true" versionDecorators=" debug www"/>
+  </target>
+
+  <target name="swf-web-release" depends="version-label">
+    <compile configFile="${airsdk.config}" outputFile="${output.swf-web-release}" debug="false" versionDecorators=" www"/>
+  </target>
+
+  <!-- creates iOS ANE directory -->
+  <target name="ios-ane-dir">
+    <delete dir="${output.ios-ane.dir}"/>
+    <copy todir="${output.ios-ane.dir}" flatten="true">
+      <resources>
+      </resources>
+    </copy>
+    <!-- create .swf copies of .ane files for mxmlc -->
+    <copy todir="${output.ios-ane.dir}">
+      <fileset dir="${output.ios-ane.dir}"></fileset>
+      <mapper type="glob" from="*.ane" to="*.swc"/>
+    </copy>
+    <echo message="done!"/>
+  </target>
+
+  <!-- creates Android ANE directory -->
+  <target name="android-ane-dir">
+    <delete dir="${output.android-ane.dir}"/>
+    <copy todir="${output.android-ane.dir}" flatten="true">
+      <resources>
+      </resources>
+    </copy>
+    <!-- create .swf copies of .ane files for mxmlc -->
+    <copy todir="${output.android-ane.dir}">
+      <fileset dir="${output.android-ane.dir}"></fileset>
+      <mapper type="glob" from="*.ane" to="*.swc"/>
+    </copy>
+    <echo message="done!"/>
+  </target>
+
+  <!-- increments the build number and makes the version label property available -->
+  <target name="version-label" depends="tool-versions">
+    <buildnumber file="${basedir}/build/build.number"/>
+    <property name="app.versionLabel" value="v${app.version} b${build.number}"/>
+    <echo message="created version label: ${app.versionLabel}"/>
+  </target>
+  
+  <target name="cleanup">
+    <delete dir="${output.dir}"/>
+  </target>
+
+  <!-- displays tool versions -->
+  <target name="tool-versions">
+    <echo message="Java version: ${ant.java.version}"/>
+    <echo message="ANT version: ${ant.version}"/>
+    <echo message="AIR SDK version:"/>
+    <java jar="${adt}" fork="true" failonerror="true">
+      <arg value="-version"/>
+    </java>
+  </target>
+
+  <!-- TARGETS: Utility -->
+
+  <target name="device-list" description="Displays the handle IDs (iOS) / device IDs (Android) of USB connected devices.">
+    <java jar="${adt}" fork="true" failonerror="true">
+      <arg value="-devices"/>
+      <arg value="-platform"/><arg value="iOS"/>
+    </java>
+    <java jar="${adt}" fork="true" failonerror="true">
+      <arg value="-devices"/>
+      <arg value="-platform"/><arg value="android"/>
+    </java>
+  </target>
+
+  <target name="flash-builder-debug" depends="cleanup,app-descriptor,swf-desktop-debug" description="Sets up directory for Flash Builder AIR desktop testing.">
+    <echo message="preparing ${fb.debug.dir} directory for Flash Builder testing..."/>
+    <!-- cleanup -->
+    <symlink action="delete" link="${fb.debug.dir}/assets"/>
+    <delete dir="${fb.debug.dir}" />
+    <!-- setup -->
+    <copy file="${output.app-descriptor}" tofile="${fb.debug.dir}/${ant.project.name}-app.xml" overwrite="true"/>
+    <copy file="${output.swf-desktop-debug}" tofile="${fb.debug.dir}/${ant.project.name}.swf" overwrite="true"/>
+    <symlink link="${fb.debug.dir}/assets" resource="${basedir}/assets"/>
+    <echo message="done!"/>
+  </target>
+
+  <target name="desktop-debug-nobuild" description="Runs app on desktop using ADL, similar to Flash Builder.">
+    <exec executable="${adl}">
+      <arg value="-profile"/><arg value="mobileDevice"/>
+      <arg value="-screensize"/><arg value="iPad"/>
+      <arg value="${fb.debug.dir}/${ant.project.name}-app.xml"/>
+    </exec>
+  </target>
+
+  <target name="desktop-debug" depends="flash-builder-debug,desktop-debug-nobuild" description="Compiles and runs app on desktop using ADL, similar to Flash Builder.">
+  </target>
+
+  <!-- TARGETS: asset generation -->
+
+  <target name="asset-spritesheet-theme">
+    <exec executable="TexturePacker">
+      <arg value="${spritesheets.dev.dir}/theme/swimAndPlayTheme.tps"/>
+      <arg value="--sheet"/><arg value="${spritesheets.out.dir}/png-exclusive/swimAndPlayTheme.png"/>
+      <arg value="--data"/><arg value="${spritesheets.out.dir}/xml/swimAndPlayTheme.xml"/>
+    </exec>
+  </target>
+
+  <target name="asset-app-icon">
+    <exec executable="${basedir}/assetDev/appIcons/makeAppIcons.sh" dir="${basedir}/assetDev/appIcons" failonerror="true" osfamily="unix">
+      <env key="PATH" path="${env.PATH}:/usr/bin:/bin:/opt/local/bin"/>
+      <arg value="${basedir}/assetDev/appIcons/${app.iconFilename}"/>
+      <arg value="${basedir}/assets/images/icons"/>
+    </exec>
+  </target>
+
+  <!-- MACROS -->
+
+  <macrodef name="compile">
+    <attribute name="configFile"/>
+    <attribute name="outputFile"/>
+    <attribute name="debug"/>
+    <attribute name="iosFlag" default="false"/>
+    <attribute name="androidFlag" default="false"/>
+    <attribute name="aneDir" default=""/>
+    <attribute name="versionDecorators" default=""/>
+    <sequential>
+      <!-- optimize property is inverse of debug property -->
+      <local name="optimize"/>
+      <condition property="optimize" value="false" else="true">
+        <istrue value="@{debug}"/>
+      </condition>
+      <!-- compile -->
+      <echo message="compiling @{outputFile} [${app.versionLabel}@{versionDecorators}]..."/>
+      <mxmlc file="${source.mainClass}" output="@{outputFile}" failonerror="true">
+        <!-- config -->
+        <load-config filename="@{configFile}"/>
+        <compiler.debug>@{debug}</compiler.debug>
+        <compiler.optimize>${optimize}</compiler.optimize>
+        <swf-version>${swf.version}</swf-version>
+        <!-- compile time constants -->
+        <compiler.define name="CONFIG::APP_ID" value="'${app.id}'"/>
+        <compiler.define name="CONFIG::APP_SHORT_NAME" value="'${app.shortName}'"/>
+        <compiler.define name="CONFIG::APP_LONG_NAME" value="'${app.longName}'"/>
+        <compiler.define name="CONFIG::VERSION_LABEL" value="'${app.versionLabel}@{versionDecorators}'"/>
+        <compiler.define name="CONFIG::VERSION_NUMBER" value="'${app.version}'"/>
+        <compiler.define name="CONFIG::BUILD_NUMBER" value="${build.number}"/>
+        <compiler.define name="CONFIG::IOS" value="@{iosFlag}"/>
+        <compiler.define name="CONFIG::ANDROID" value="@{androidFlag}"/>
+        <compiler.define name="CONFIG::MOBILE" value="CONFIG::IOS || CONFIG::ANDROID"/>
+        <!-- source paths -->
+        <compiler.source-path path-element="${source.root}"/>
+        <compiler.source-path path-element="${basedir}/lib/RhinoCommon/as3"/>
+        <!-- library paths -->
+        <compiler.library-path dir="${basedir}/lib" append="true">
+          <include name="starling-1.7/starling.swc"/>
+          <include name="feathers-ui-2.3.0/feathers.swc"/>
+          <include name="feathers-ui-2.3.0/MetalWorksMobileTheme.swc"/>
+          <include name="greensock-v12-as3/greensock.swc"/>
+          <include name="fzip/lib/fzip.swc"/>
+          <include name="as3-signals-0.8/as3-signals-v0.8.swc"/>
+        </compiler.library-path>
+        <!-- native extensions -->
+        <compiler.external-library-path dir="@{aneDir}" includes="*.swc" append="true"/>
+      </mxmlc>
+      <echo message="done!"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="package-ipa">
+    <attribute name="swfFile" description="path to swf file to include in the IPA"/>
+    <attribute name="target"/>
+    <attribute name="provisioningProfile"/>
+    <attribute name="connectLine"/>
+    <attribute name="useLegacyAOTLine"/>
+    <attribute name="platformSDKLine"/>
+    <attribute name="outputFile" description="path of file to create - NO extension"/>
+    <sequential>
+      <echo message="creating iOS .ipa file for target @{target} with provisioning profile @{provisioningProfile}..."/>
+      <copy file="@{swfFile}" tofile="${output.ipaPackageDir}/${ant.project.name}.swf" overwrite="true"/>
+      <java jar="${adt}" fork="true" failonerror="true">
+        <arg value="-package"/>
+        <arg value="-target"/><arg value="@{target}"/>
+        <arg line="@{connectLine}"/>
+        <arg line="@{useLegacyAOTLine}"/>
+        <!-- NATIVE_SIGNING_OPTIONS -->
+        <arg value="-provisioning-profile"/><arg value="@{provisioningProfile}"/>
+        <arg value="-storetype"/><arg value="pkcs12"/>
+        <arg value="-keystore"/><arg value="${cert.ios_keystore}"/>
+        <arg value="-storepass"/><arg value="${cert.ios_password}"/>
+        <!-- OUTPUT -->
+        <arg value="@{outputFile}"/>
+        <!-- APP_DESCRIPTOR -->
+        <arg value="${output.ipaPackageDir}/${app.descriptorFilename}"/>
+        <!-- FILE_OPTIONS -->
+        <arg value="-C"/><arg value="${output.ipaPackageDir}"/><arg value="."/>
+        <arg value="-extdir"/><arg value="${output.ios-ane.dir}"/>
+        <!-- PLATFORM_SDK -->
+        <arg line="@{platformSDKLine}"/>
+      </java>
+      <echo message="done!"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="package-apk">
+    <attribute name="swfFile" description="path to swf file to include in the APK"/>
+    <attribute name="target"/>
+    <attribute name="connect"/>
+    <attribute name="outputFile" description="path of file to create - NO extension"/>
+    <sequential>
+      <echo message="creating Android .apk file for target @{target}..."/>
+      <copy file="@{swfFile}" tofile="${output.apkPackageDir}/${ant.project.name}.swf" overwrite="true"/>
+      <java jar="${adt}" fork="true" failonerror="true">
+        <arg value="-package"/>
+        <arg value="-target"/><arg value="@{target}"/>
+        <arg line="@{connect}"/>
+        <!-- NATIVE_SIGNING_OPTIONS -->
+        <arg value="-storetype"/><arg value="pkcs12"/>
+        <arg value="-keystore"/><arg value="${cert.android_keystore}"/>
+        <arg value="-storepass"/><arg value="${cert.android_password}"/>
+        <!-- OUTPUT -->
+        <arg value="@{outputFile}"/>
+        <!-- APP_DESCRIPTOR -->
+        <arg value="${output.apkPackageDir}/${app.descriptorFilename}"/>
+        <!-- FILE_OPTIONS -->
+        <arg value="-C"/><arg value="${output.apkPackageDir}"/><arg value="."/>
+        <arg value="-extdir"/><arg value="${output.android-ane.dir}"/>
+      </java>
+      <modify-apk apkFile="@{outputFile}.apk" if:true="${includeWelcomeVideos}"/>
+      <echo message="done!"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="modify-apk" description="moves video files from assets/videos -> res/raw so they can be used">
+    <attribute name="apkFile"/>
+    <sequential>
+      <echo message="modifying APK file @{apkFile}..."/>
+    
+      <!-- create convenience local properties -->
+      <local name="apktoolWorkDirName"/>
+      <basename property="apktoolWorkDirName" file="@{apkFile}" suffix=".apk"/>
+      <local name="apktoolWorkDir"/>
+      <property name="apktoolWorkDir" value="${output.dir}/${apktoolWorkDirName}"/>
+      <local name="apktoolOutputFileName"/>
+      <basename property="apktoolOutputFileName" file="@{apkFile}"/>
+
+      <!-- delete apktool work directory -->
+      <delete dir="${apktoolWorkDir}"/>
+
+      <!-- decompile APK with apktool -->
+      <java jar="${apktool}" fork="true" dir="${output.dir}" failonerror="true">
+        <jvmarg value="-Xmx512M"/>
+        <jvmarg value="-Djava.awt.headless=true"/>
+        <arg value="d"/><arg value="@{apkFile}"/>
+        <arg value="-s"/><!-- do not decode sources -->
+      </java>
+      
+      <!-- modify APK contents -->
+      <move todir="${apktoolWorkDir}/res/raw">
+        <fileset dir="${apktoolWorkDir}/assets/assets/videos"/>
+      </move>
+      
+      <!-- rebuild APK with apktool -->
+      <java jar="${apktool}" fork="true" dir="${output.dir}" failonerror="true">
+        <jvmarg value="-Xmx512M"/>
+        <jvmarg value="-Djava.awt.headless=true"/>
+        <arg value="b"/><arg value="${apktoolWorkDirName}"/>
+        <arg value="-o"/><arg value="${apktoolOutputFileName}"/>
+      </java>
+      
+      <!-- delete apktool work directory -->
+      <delete dir="${apktoolWorkDir}"/>
+
+      <!-- sign modified APK -->
+      <signjar jar="@{apkFile}" alias="${cert.android_alias}"
+        storetype="pkcs12" keystore="${cert.android_keystore}" storepass="${cert.android_password}"
+        sigalg="MD5withRSA" digestalg="SHA1"/>
+
+    </sequential>
+  </macrodef>
+
+  <macrodef name="install">
+    <attribute name="packageFile"/>
+    <attribute name="platform"/>
+    <sequential>
+      <echo message="uninstalling..."/>
+      <java jar="${adt}" fork="true" failonerror="false">
+        <arg value="-uninstallApp"/>
+        <arg value="-platform"/><arg value="@{platform}"/>
+        <arg value="-appid"/><arg value="${app.id}"/>
+      </java>
+      <echo message="installing..."/>
+      <java jar="${adt}" fork="true" failonerror="true">
+        <arg value="-installApp"/>
+        <arg value="-platform"/><arg value="@{platform}"/>
+        <arg value="-package"/><arg value="@{packageFile}"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="installIosSimulator">
+    <attribute name="packageFile"/>
+    <sequential>
+      <!--
+        note: Select simulator device by setting AIR_IOS_SIMULATOR_DEVICE environment variable;
+              possible values are "iPad Retina", "iPhone 6 Plus", etc.
+              To view list, run 'xcrun simctl list devices' from the command line (assuming XCode command line tools are avaiable)
+        note: iOS Simulator will only work for ANEs that support the architecture of the Mac that's running it (i386).
+              For this reason, some ANEs may need to be disabled for iOS Simulator to work (like StoreKit, RhinoNativeVideo)
+      -->
+      <echo message="uninstalling..."/>
+      <java jar="${adt}" fork="true" failonerror="false">
+        <arg value="-uninstallApp"/>
+        <arg value="-platform"/><arg value="ios"/>
+        <arg value="-platformsdk"/><arg value="${iossimsdk.dir}"/>
+        <arg value="-device"/><arg value="ios-simulator"/>
+        <arg value="-appid"/><arg value="${app.id}"/>
+      </java>
+      <echo message="installing..."/>
+      <java jar="${adt}" fork="true" failonerror="true">
+        <arg value="-installApp"/>
+        <arg value="-platform"/><arg value="ios"/>
+        <arg value="-platformsdk"/><arg value="${iossimsdk.dir}"/>
+        <arg value="-device"/><arg value="ios-simulator"/>
+        <arg value="-package"/><arg value="@{packageFile}"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="addExtensionToDescriptorFile">
+    <attribute name="descriptorFile"/>
+    <attribute name="aneId"/>
+    <sequential>
+      <local name="token"/>
+      <property name="token" value="&lt;extensions&gt;"/>
+      <replace file="@{descriptorFile}">
+        <replacefilter token="${token}" value="${token}${line.separator}    &lt;extensionID&gt;@{aneId}&lt;/extensionID&gt;"/>
+      </replace>
+      <echo message="added ANE id [@{aneId}] to application descriptor file"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="addIOSEntitlementToDescriptorFile">
+    <attribute name="descriptorFile"/>
+    <attribute name="entitlementXML"/>
+    <sequential>
+      <local name="token"/>
+      <property name="token" value="&lt;Entitlements&gt;&lt;![CDATA["/>
+      <replace file="@{descriptorFile}">
+        <replacefilter token="${token}" value="${token}${line.separator}      @{entitlementXML}"/>
+      </replace>
+      <echo message="added iOS entitlement [@{entitlementXML}] to application descriptor file"/>
+    </sequential>
+  </macrodef>
+
+</project>

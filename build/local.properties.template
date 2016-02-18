@@ -1,0 +1,10 @@
+# use this template file to create your own local.properties file
+
+# certificates
+cert.ios_keystore         = /path/to/iOS/privateKeyFile.p12
+cert.ios_password         = privateKeyFilePassword
+cert.android_keystore     = /path/to/android/privateKeyFile.p12
+cert.android_password     = privateKeyFilePassword
+
+# debugging
+debug.ip                  = IP address of machine running debugger

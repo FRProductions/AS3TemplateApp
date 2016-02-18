@@ -1,0 +1,1 @@
+asset pack directories to package with the app go here, otherwise they will be dynamically downloaded
