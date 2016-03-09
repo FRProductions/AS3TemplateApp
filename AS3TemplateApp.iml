@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="Flex" version="4">
+  <component name="FlexBuildConfigurationManager" active="AS3TemplateApp">
+    <configurations>
+      <configuration name="AS3TemplateApp" target-platform="Mobile" pure-as="true" main-class="AS3TemplateApp" output-file="AS3TemplateApp.swf" output-folder="$MODULE_DIR$/bin-debug" skip-build="true">
+        <dependencies>
+          <entries>
+            <entry library-id="833a0105-3a31-4b5d-a178-903ffdb792b7">
+              <dependency linkage="Merged" />
+            </entry>
+            <entry library-id="ecb3f234-c40b-4787-a3f5-082e24fe4132">
+              <dependency linkage="Merged" />
+            </entry>
+            <entry library-id="23fa136a-3a19-4f9a-af79-18fbd25e93ce">
+              <dependency linkage="Merged" />
+            </entry>
+            <entry library-id="96bc88b5-689a-46c5-aabc-35ebd563cdfc">
+              <dependency linkage="Merged" />
+            </entry>
+            <entry library-id="f3a18a1f-a507-4bfc-bca6-e907c4a5e214">
+              <dependency linkage="Merged" />
+            </entry>
+            <entry library-id="7edded4a-f694-40ad-98af-743383fffd4b">
+              <dependency linkage="Merged" />
+            </entry>
+          </entries>
+          <sdk name="AIRSDK" />
+        </dependencies>
+        <compiler-options>
+          <map>
+            <entry key="compiler.locale" value="en_US" />
+          </map>
+          <option name="additionalOptions" value="-define+=CONFIG::APP_ID,'' -define+=CONFIG::APP_SHORT_NAME,'' -define+=CONFIG::APP_LONG_NAME,'' -define+=CONFIG::VERSION_LABEL,'' -define+=CONFIG::VERSION_NUMBER,'' -define+=CONFIG::BUILD_NUMBER,0 -define+=CONFIG::IOS,true -define+=CONFIG::ANDROID,true -define+=CONFIG::MOBILE,true" />
+        </compiler-options>
+        <packaging-air-desktop />
+        <packaging-android use-generated-descriptor="false" custom-descriptor-path="$MODULE_DIR$/src/GODISNOWHERE-app.xml" package-file-name="GODISNOWHERE" />
+        <packaging-ios use-generated-descriptor="false" custom-descriptor-path="$MODULE_DIR$/src/GODISNOWHERE-app.xml" package-file-name="GODISNOWHERE" />
+      </configuration>
+    </configurations>
+    <compiler-options />
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/RhinoCommon/as3" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/as3-signals-0.8/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/feathers-ui-2.3.0/source" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/fzip/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/greensock-v12-as3" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib/starling-1.7/src" isTestSource="false" />
+    </content>
+    <orderEntry type="jdk" jdkName="AIRSDK" jdkType="Flex SDK Type (new)" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="833a0105-3a31-4b5d-a178-903ffdb792b7" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/as3-signals-0.8/as3-signals-v0.8.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="ecb3f234-c40b-4787-a3f5-082e24fe4132" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/feathers-ui-2.3.0/feathers.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="23fa136a-3a19-4f9a-af79-18fbd25e93ce" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/feathers-ui-2.3.0/MetalWorksMobileTheme.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="96bc88b5-689a-46c5-aabc-35ebd563cdfc" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/fzip/lib/fzip.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="f3a18a1f-a507-4bfc-bca6-e907c4a5e214" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/greensock-v12-as3/greensock.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="7edded4a-f694-40ad-98af-743383fffd4b" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/starling-1.7/starling.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>
