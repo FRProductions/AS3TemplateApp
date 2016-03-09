@@ -1,8 +1,16 @@
 package com.rhino.AS3TemplateApp.screens
 {
   import com.greensock.TweenLite;
+  import com.greensock.easing.Linear;
   import com.rhino.AS3TemplateApp.RootSprite;
+  import com.rhino.AS3TemplateApp.assets.AssetItem;
+  import com.rhino.AS3TemplateApp.assets.Assets;
+  import com.rhino.AS3TemplateApp.assets.SoundId;
   import com.rhino.AS3TemplateApp.themes.AppMobileTheme;
+  import com.rhino.assetPack.AssetPackInfo;
+  import com.rhino.assetPack.AssetPackUpdater;
+  import com.rhino.util.LoadRatioGroup;
+  import com.rhino.util.Log;
 
   import feathers.controls.Label;
   import feathers.controls.ProgressBar;
@@ -10,6 +18,8 @@ package com.rhino.AS3TemplateApp.screens
   import feathers.display.Scale9Image;
   import feathers.events.FeathersEventType;
   import feathers.layout.VerticalLayout;
+
+  import flash.utils.setTimeout;
 
   import org.osflash.signals.ISignal;
   import org.osflash.signals.Signal;
@@ -23,6 +33,9 @@ package com.rhino.AS3TemplateApp.screens
      **************************************************************************/
     
     private var mCompleted:Signal;
+    private var mAssetPacks:Vector.<AssetPackInfo>;
+    private var mAssetItems:Vector.<AssetItem>;
+    private var mLoadRatioGroup:LoadRatioGroup;
     private var mProgressBar:ProgressBar;
     
     /**************************************************************************
@@ -35,6 +48,24 @@ package com.rhino.AS3TemplateApp.screens
       
       // init
       mCompleted = new Signal();
+
+      // specify asset packs to download
+      mAssetPacks = new <AssetPackInfo>[
+        new AssetPackInfo(Assets.API_CORE)
+      ];
+
+      // specify asset items to load into memory
+      mAssetItems = new <AssetItem>[
+        new AssetItem(AssetItem.TYP_IMAGE_UNSCALED, 'someAsset'               , '.png', Assets.instance.coreDirectories),
+        new AssetItem(AssetItem.TYP_SOUND,          SoundId.LOAD_SUCCESS      , null  , Assets.instance.coreDirectories),
+      ];
+
+      // setup load ratio group
+      mLoadRatioGroup = new LoadRatioGroup();
+      mLoadRatioGroup.addItem(mAssetPacks);
+      mLoadRatioGroup.addItem(mAssetItems);
+
+      // add listener
       this.addEventListener(FeathersEventType.CREATION_COMPLETE,onCreationComplete);
     }
     
@@ -81,47 +112,60 @@ package com.rhino.AS3TemplateApp.screens
     
     private function onCreationComplete(event:Event):void
     {
+      // cleanup
       this.removeEventListener(FeathersEventType.CREATION_COMPLETE,onCreationComplete);
-      updateAssetPacks();
-    }
-        
-    private function updateAssetPacks():void
-    {
-      // TODO: setup asset packs for download
 
-      /**/
-      mProgressBar.value = 1.0;
-      TweenLite.to(mProgressBar,1.0,{ alpha:0.0, onComplete:function():void {
-        mCompleted.dispatch();
+      // fade in progress bar, then start loading
+      TweenLite.to(mProgressBar,1.0,{ delay:0.5, alpha:1.0, ease:Linear.ease, onComplete:function():void {
+        loadAssetPacks();
       }});
-      /**/
+    }
 
-/*
+    private function loadAssetPacks():void
+    {
       // update assets
-      var astpckupd:AssetPackUpdater = new AssetPackUpdater(
-        AS3TemplateApp.createAssetPackClient(),
-        new <AssetPackInfo>[
-          new AssetPackInfo(Assets.API_CORE)
-        ]
-      );
-      astpckupd.progressChanged.add(function(ratio:Number):void {
-        mProgressBar.value = ratio;
+      var astpckupr:AssetPackUpdater = new AssetPackUpdater(AS3TemplateApp.createAssetPackClient(),mAssetPacks);
+      astpckupr.progressChanged.add(function(ratio:Number):void {
+        mLoadRatioGroup.updateItemRatio(mAssetPacks,ratio);
+        mProgressBar.value = mLoadRatioGroup.totalLoadRatio;
       });
-      astpckupd.completed.add(function():void {
+      astpckupr.completed.add(function():void {
+        mLoadRatioGroup.updateItemRatio(mAssetPacks,1.0);
+        mProgressBar.value = mLoadRatioGroup.totalLoadRatio;
         Log.out("asset pack update successful");
-        TweenLite.to(mProgressBar,1.0,{ alpha:0.0, onComplete:function():void {
-          mCompleted.dispatch();
-        }});
+        loadAssets();
       });
-      astpckupd.failed.add(function():void {
+      astpckupr.failed.add(function():void {
         var dlymls:Number = 5000;
         Log.out("failed to update asset packs; trying again in " + (dlymls/1000) + " seconds...");
-        setTimeout(updateAssetPacks,dlymls);
+        setTimeout(loadAssetPacks,dlymls);
       });
-      astpckupd.update();
-*/
+      astpckupr.update();
     }
-    
+
+    private function loadAssets():void
+    {
+      Assets.instance.enqueueAssets(mAssetItems);
+      Assets.instance.loadEnqueuedAssets(onAssetLoadProgress);
+    }
+
+    private function onAssetLoadProgress(ratio:Number):void
+    {
+      mLoadRatioGroup.updateItemRatio(mAssetItems,ratio);
+      mProgressBar.value = mLoadRatioGroup.totalLoadRatio;
+      if(ratio==1.0) { runLoadCompleteAnimation(); }
+    }
+
+    private function runLoadCompleteAnimation():void
+    {
+      Assets.instance.playSound(SoundId.LOAD_SUCCESS);
+
+      // fade out progress bar
+      TweenLite.to(mProgressBar,1.0,{ alpha:0.0, onComplete:function():void {
+        setTimeout(function():void { mCompleted.dispatch(); },1000);
+      }});
+    }
+
     /**************************************************************************
      * STATIC PROPERTIES
      **************************************************************************/

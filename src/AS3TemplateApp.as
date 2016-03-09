@@ -186,7 +186,7 @@ CONFIG::MOBILE {
     public static var sAppDeactivatedSignal:Signal = new Signal();
     
     // web services
-    private static const SERVICES_BASE_URL:String = "http://fraboom.com/something/web/services/";
+    private static const SERVICES_BASE_URL:String = "http://something.com/web/services/";
     public static const WSD_ASSET_PACK_INFO:WebServiceData = new WebServiceData(SERVICES_BASE_URL, "asset-pack/asset-pack.php", "asset-pack web service");
     
     /**************************************************************************
